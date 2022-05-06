@@ -1,0 +1,4 @@
+PySide6
+mysql-connector-python
+
+icon attribute <a href="https://www.flaticon.com/free-icons/cashier" title="cashier icons">Cashier icons created by monkik - Flaticon</a>
