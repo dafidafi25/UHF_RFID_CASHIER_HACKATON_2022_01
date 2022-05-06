@@ -45,8 +45,8 @@ class Ui_MainWindow(UI_Actions, object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setWidget(self.widget)
+        self.scrollArea.setAlignment(Qt.AlignHCenter)
 
         self.verticalLayout.addWidget(self.scrollArea)
 

@@ -17,16 +17,22 @@ try:
 except Error as e:
     print("Error while connecting to MySQL", e)
 
+def checkDataFromDatabase(stock_uuid):
+    cursor.execute("select * from stock_data where stock_uuid = '" + stock_uuid + "';")
+    myresult = cursor.fetchall()
 
-cursor.execute("SELECT * FROM stock_data")
+    print("Query", "select * from stock_data where stock_uuid ='" + stock_uuid + "';")
 
-myresult = cursor.fetchall()
+    if len(myresult) == 0:
+        print("stock_uuid not Found")
 
-for x in myresult:
-  print(x[0])
-  print(x[1])
-  print(x[2])
-  print(x[3])
+    for x in myresult:
+        print(x[0])
+        print(x[1])
+        print(x[2])
+        print(x[3])
+
+    return myresult
 # finally:
 #     if connection.is_connected():
 #         cursor.close()
