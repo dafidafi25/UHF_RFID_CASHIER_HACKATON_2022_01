@@ -1,5 +1,6 @@
 from PySide6 import QtCore
-from PySide6.QtWidgets import QTableWidgetItem, QLabel, QHBoxLayout
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QLabel, QHBoxLayout, QApplication, QDialog
 from PySide6.QtCore import Qt
 import database
 from dialogWindowAddNewItem import Ui_Dialog
@@ -33,7 +34,11 @@ class UI_Actions_Main_Window:
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     def onTapClearButton(self):
-        self.grandTotalVal.setText("Clear Clicked!")
+        self.localCart.clear()
+        formattedGrandTotal = "IDR {:,.2f}".format(0)
+        self.grandTotalVal.setText(formattedGrandTotal)
+
+        self.clearvbox()
 
     def onTapPaymentMethod(self):
         self.grandTotalVal.setText("Payment Clicked")
@@ -146,5 +151,4 @@ class UI_Actions_Main_Window:
         self.productName.setFixedHeight(fixedHeight)
         self.productQuantity.setFixedHeight(fixedHeight)
         self.productPrice.setFixedHeight(fixedHeight)
-        self.productSubTotal.setFixedHeight(fixedHeight)
         self.productSubTotal.setFixedHeight(fixedHeight)

@@ -19,9 +19,9 @@ from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMainWindow,
     QMenuBar, QPushButton, QScrollArea, QSizePolicy,
     QSpacerItem, QStatusBar, QVBoxLayout, QWidget)
 
-from uiActions import UI_Actions
-sdf
-class Ui_MainWindow(UI_Actions, object):
+from uiActions import UI_Actions_Main_Window
+
+class Ui_MainWindow(UI_Actions_Main_Window, object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
@@ -34,12 +34,14 @@ class Ui_MainWindow(UI_Actions, object):
         self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout.setAlignment(Qt.AlignTop)
 
-        self.vbox = QVBoxLayout(self.verticalLayoutWidget)
+        self.vbox = QVBoxLayout()
         self.widget = QWidget()
         self.scrollArea = QScrollArea()
 
         self.widget.setLayout(self.vbox)
+        self.vbox.setAlignment(Qt.AlignTop)
 
         self.scrollArea.setObjectName(u"scrollArea")
         self.scrollArea.setWidgetResizable(True)
