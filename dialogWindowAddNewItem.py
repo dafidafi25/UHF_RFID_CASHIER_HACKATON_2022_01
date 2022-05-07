@@ -98,7 +98,6 @@ class Ui_Dialog(object):
     # setupUi
 
     def reject(self):
-        print("JEFF LALLafsfdasdfasdfALLA")
         self.Dialog.reject()
 
     def accept(self):
