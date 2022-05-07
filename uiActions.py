@@ -1,13 +1,8 @@
 from PySide6 import QtCore
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QLabel, QHBoxLayout, QApplication, QDialog
+from PySide6.QtWidgets import QTableWidgetItem, QLabel, QHBoxLayout
 from PySide6.QtCore import Qt
-import database
-from dialogWindowAddNewItem import Ui_Dialog
 
-class UI_Actions_Main_Window:
-    localCart = []
-    showedData = []
+class UI_Actions:
 
     def initialSetup(self):
         self.slotConnectionSetup()
@@ -25,11 +20,7 @@ class UI_Actions_Main_Window:
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     def onTapClearButton(self):
-        self.localCart.clear()
-        formattedGrandTotal = "IDR {:,.2f}".format(0)
-        self.grandTotalVal.setText(formattedGrandTotal)
-
-        self.clearvbox()
+        self.grandTotalVal.setText("Clear Clicked!")
 
     def onTapPaymentMethod(self):
         self.grandTotalVal.setText("Payment Clicked")
@@ -39,99 +30,92 @@ class UI_Actions_Main_Window:
 
     def onTapAddNewItem(self):
         self.grandTotalVal.setText("Adding...")
-        print("Opening a new popup window...")
-        self.w = Ui_Dialog()
-        dialog = QDialog()
-        self.w.setupUi(dialog)
-        dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        dialog.exec_()
-        # self.w.show()
 
-    def clearvbox(self, L=False):
-        if not L:
-            L = self.vbox
-        if L is not None:
-            while L.count():
-                item = L.takeAt(0)
+    def addNewRow(self):
 
-                widget = item.widget()
+        data = [
+            ['Cilok Bakar', 3, 5000, 15000],
+            ['Cilok Goreng', 2, 2000, 15000],
+            ['Cilok Rebus', 5, 5000, 15000],
+            ['Cilok Panggang', 1, 4000, 15000],
+            ]
 
-                if widget is not None:
-                    widget.deleteLater()
-                else:
-                    self.clearvbox(item.layout())
+        productWidth = 260 + 130
+        quantityWidth = 130
+        priceWidth = 260
+        subTotalWidth = 260
 
-    def addNewRow(self, stock_uuid):
-        grandTotalValue = 0
+        for _ in range(10):
+            for item in data:
+                self.productName = QLabel(item[0])
+                self.productQuantity = QLabel(str(item[1]))
+                self.productPrice = QLabel(str(item[2]))
+                self.productSubTotal = QLabel(str(item[3]))
 
-        if stock_uuid in self.localCart:
-            return
-        else:
-            good = database.checkDataFromDatabase(stock_uuid)
+                self.productName.setMinimumWidth(productWidth)
+                self.productQuantity.setMinimumWidth(quantityWidth)
+                self.productPrice.setMinimumWidth(priceWidth)
+                self.productSubTotal.setMinimumWidth(subTotalWidth)
 
-            if len(good) > 0:
-                self.localCart.append(good)
-            else:
-                return
+                self.horizontalLayout = QHBoxLayout()
+                # self.horizontalLayout.setObjectName(u"horizontalLayout")
 
-        for item in self.localCart:
-            rowData = []
+                self.horizontalLayout.addWidget(self.productName)
+                self.horizontalLayout.addWidget(self.productQuantity)
+                self.horizontalLayout.addWidget(self.productPrice)
+                self.horizontalLayout.addWidget(self.productSubTotal)
 
-            for element in item:
-                rowData.append(element[1])
-                rowData.append(element[2])
-                rowData.append(element[3])
-                rowData.append(element[4])
+                self.vbox.addLayout(self.horizontalLayout)
 
-            self.showedData.append(rowData)
 
-        for item in self.showedData:
-            self.productName = QLabel(str(item[0]))
-            self.productQuantity = QLabel(str(item[1]))
 
-            rawPrice = float(item[2])
-            formattedPrice = "IDR {:,.2f}".format(rawPrice)
-            self.productPrice = QLabel(formattedPrice)
+    def setUpListBarang(self):
+        data = pd.DataFrame([
+            ['Cilok Bakar', 3, 5000, 15000],
+            ['Cilok Goreng', 2, 2000, 15000],
+            ['Cilok Rebus', 5, 5000, 15000],
+            ['Cilok Panggang', 1, 4000, 15000],
+        ], columns=['Products', 'Quantity', 'Price', 'SubTotal'])
 
-            rawSubTotal = float((int(item[2]) * int(item[1])))
-            formattedSubTotal = "IDR {:,.2f}".format(rawSubTotal)
-            self.productSubTotal = QLabel(formattedSubTotal)
+        self.model = TableModel(data)
+        self.listBarang.setModel(self.model)
 
-            grandTotalValue += rawSubTotal
+        productWidth = 260 + 130
+        quantityWidth = 130
+        priceWidth = 260
+        subTotalWidth = 260
 
-            self.setupUILabel()
-            self.horizontalLayout = QHBoxLayout()
+        columnSize = [productWidth, quantityWidth, priceWidth, subTotalWidth]
+        for column in range(len(columnSize)):
+            self.listBarang.setColumnWidth(column, columnSize[column])
 
-            self.horizontalLayout.addWidget(self.productName)
-            self.horizontalLayout.addWidget(self.productQuantity)
-            self.horizontalLayout.addWidget(self.productPrice)
-            self.horizontalLayout.addWidget(self.productSubTotal)
+    def updateTableViewData(self):
+        rawData = []
+        processedData = []
 
-            self.vbox.addLayout(self.horizontalLayout)
 
-        formattedGrandTotal = "IDR {:,.2f}".format(grandTotalValue)
-        self.grandTotalVal.setText(formattedGrandTotal)
 
-    def setupUILabel(self):
-        custom_font = QFont("Monaco", 20, 10, False)
-        # custom_font.setWeight(QFont.Medium);
-        # custom_font.setBold(True);
+class TableModel(QtCore.QAbstractTableModel):
+    def __init__(self, data):
+        super(TableModel, self).__init__()
+        self._data = data
 
-        QApplication.setFont(custom_font, "QLabel")
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            value = self._data.iloc[index.row(), index.column()]
+            return str(value)
 
-        productWidth = 260 + 130 - 20
-        quantityWidth = 130 - 20
-        priceWidth = 260 - 20
-        subTotalWidth = 260 - 20
+    def rowCount(self, index):
+        return self._data.shape[0]
 
-        fixedHeight = 50
+    def columnCount(self, index):
+        return self._data.shape[1]
 
-        self.productName.setMinimumWidth(productWidth)
-        self.productQuantity.setMinimumWidth(quantityWidth)
-        self.productPrice.setMinimumWidth(priceWidth)
-        self.productSubTotal.setMinimumWidth(subTotalWidth)
+    def headerData(self, section, orientation, role):
+        # section is the index of the column/row.
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return str(self._data.columns[section])
 
-        self.productName.setFixedHeight(fixedHeight)
-        self.productQuantity.setFixedHeight(fixedHeight)
-        self.productPrice.setFixedHeight(fixedHeight)
-        self.productSubTotal.setFixedHeight(fixedHeight)
+            if orientation == Qt.Vertical:
+                return str(self._data.index[section])
