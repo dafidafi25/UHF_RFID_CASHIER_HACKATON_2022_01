@@ -74,35 +74,36 @@ class UI_Actions_Main_Window:
         grandTotalValue = 0
         fullUuid = typeProduct + " " + product_code
 
-        if fullUuid in self.localCart:
-            return
-        else:
-            good = database.checkDataFromDatabase(fullUuid)
-
-            if len(good) > 0:
-                quantityPerItem = 0
-                self.localCart.extend(good)
-
-                for cartId in self.localCart:
-                    _, name, price, uuid = cartId
-                    print("DAFA", uuid[0:23])
-                    if uuid[0:23] == typeProduct:
-                        print("LALALA")
-                        quantityPerItem += 1
-
-                cardModel = {
-                    "name": str(name),
-                    "quantity": quantityPerItem,
-                    "price": str(price),
-                    "subTotal": quantityPerItem * price
-                }
-
-                self.showedData.append(cardModel)
-            else:
+        for item in self.localCart:
+            _, _, _, uuid = item
+            if uuid == fullUuid:
                 return
 
+        good = database.checkDataFromDatabase(fullUuid)
+
+        if len(good) > 0:
+            quantityPerItem = 0
+            self.localCart.extend(good)
+
+            for cartId in self.localCart:
+                _, name, price, uuid = cartId
+                print("DAFA", uuid[0:23])
+                if uuid[0:23] == typeProduct:
+                    print("LALALA")
+                    quantityPerItem += 1
+
+            cardModel = {
+                "name": str(name),
+                "quantity": quantityPerItem,
+                "price": str(price),
+                "subTotal": int(quantityPerItem) * int(price)
+            }
+
+            self.showedData.append(cardModel)
+        else:
+            return
+
         for item in self.showedData:
-            print("jef", item)
             self.productName = QLabel(item["name"])
             self.productQuantity = QLabel(str(item["quantity"]))
 
