@@ -15,7 +15,7 @@ class CartModel:
 
 class UI_Actions_Main_Window:
     localCart = []
-    showedData = [CartModel]
+    showedData = []
 
     def initialSetup(self):
         self.slotConnectionSetup()
@@ -65,47 +65,47 @@ class UI_Actions_Main_Window:
                 else:
                     self.clearvbox(item.layout())
 
-    def addNewRow(self, stock_uuid):
+    def addNewRow(self, typeProduct, product_code):
         grandTotalValue = 0
+        fullUuid = typeProduct + " " + product_code
 
-        if stock_uuid in self.localCart:
+        if fullUuid in self.localCart:
             return
         else:
-            good = database.checkDataFromDatabase(stock_uuid)
-            for item in good:
-                self.name = item[1]
-                self.price = item[2]
-
-            typeProduct = stock_uuid[0:23]
-            quantity = len(list(filter(lambda product: product[0:23] == typeProduct, self.localCart)))
-            modelData = CartModel(self.name, self.price, quantity, (quantity * self.price))
-            self.showedData.append(modelData)
+            good = database.checkDataFromDatabase(fullUuid)
 
             if len(good) > 0:
-                self.localCart.append(good)
+                quantityPerItem = 0
+                self.localCart.extend(good)
+
+                for cartId in self.localCart:
+                    _, name, price, uuid = cartId
+                    print("DAFA", uuid[0:23])
+                    if uuid[0:23] == typeProduct:
+                        print("LALALA")
+                        quantityPerItem += 1
+
+                cardModel = {
+                    "name": str(name),
+                    "quantity": quantityPerItem,
+                    "price": str(price),
+                    "subTotal": quantityPerItem * price
+                }
+
+                self.showedData.append(cardModel)
             else:
                 return
 
-        # for item in self.localCart:
-        #     rowData = []
-        #
-        #     for element in item:
-        #         rowData.append(element[1])
-        #         rowData.append(element[2])
-        #         rowData.append(element[3])
-        #
-        #     self.showedData.append(rowData)
-
         for item in self.showedData:
-            print(item.price)
-            self.productName = QLabel(item.name)
-            self.productQuantity = QLabel(str(item.quantity))
+            print("jef", item)
+            self.productName = QLabel(item["name"])
+            self.productQuantity = QLabel(str(item["quantity"]))
 
-            rawPrice = float(item.price)
+            rawPrice = float(item["price"])
             formattedPrice = "IDR {:,.2f}".format(rawPrice)
             self.productPrice = QLabel(formattedPrice)
 
-            rawSubTotal = float(item.subTotal)
+            rawSubTotal = float(item["subTotal"])
             formattedSubTotal = "IDR {:,.2f}".format(rawSubTotal)
             self.productSubTotal = QLabel(formattedSubTotal)
 

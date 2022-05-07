@@ -20,7 +20,7 @@ class Window(QMainWindow):
         self.ui = Ui_MainWindowMainWindow()
         self.ui.setupUi(self)
         self.ui.initialSetup()
-        self.ui.addNewRow("E2 80 68 94 20 00 50 09 57 71 b4 d1")
+        self.ui.addNewRow("E2 80 68 94 20 00 50 09", "57 71 b4 d1")
 
 app = QApplication(sys.argv)
 window = Window()
