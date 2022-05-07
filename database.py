@@ -18,10 +18,9 @@ except Error as e:
     print("Error while connecting to MySQL", e)
 
 def checkDataFromDatabase(stock_uuid):
-    cursor.execute("select * from stock_data where stock_uuid = '" + stock_uuid + "';")
+    query = f"select * from stock_data where stock_uuid = '{stock_uuid}';"
+    cursor.execute(query)
     myresult = cursor.fetchall()
-
-    print("Query", "select * from stock_data where stock_uuid ='" + stock_uuid + "';")
 
     if len(myresult) == 0:
         print("stock_uuid not Found")
@@ -32,6 +31,15 @@ def checkDataFromDatabase(stock_uuid):
         print(x[2])
         print(x[3])
 
+    return myresult
+
+def addNewStockItem(name, price, stock_uuid):
+    queryRaw = 'INSERT INTO stock_data (name,price,stock_uuid) VALUES (%s,%s,%s)'
+    queryValue = (name, price, stock_uuid)
+    cursor.execute(queryRaw, queryValue)
+    connection.commit()
+
+    myresult = cursor.fetchall()
     return myresult
 # finally:
 #     if connection.is_connected():

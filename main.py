@@ -3,7 +3,7 @@ import sys
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
 # from ui_mainwindow import UI_MainWindow
-from uiMainWindow import Ui_MainWindow
+from uiMainWindow import Ui_MainWindowMainWindow
 import database
 
 # app = QApplication(sys.argv)
@@ -17,10 +17,10 @@ class Window(QMainWindow):
         self.setWindowTitle("CashierKu")
         self.setWindowIcon(QIcon("cashierIcon.png"))
 
-        self.ui = Ui_MainWindow()
+        self.ui = Ui_MainWindowMainWindow()
         self.ui.setupUi(self)
         self.ui.initialSetup()
-        self.ui.addNewRow()
+        self.ui.addNewRow("E2 80 68 94 20 00 50 09 57 71 b4 d1")
 
 app = QApplication(sys.argv)
 window = Window()
