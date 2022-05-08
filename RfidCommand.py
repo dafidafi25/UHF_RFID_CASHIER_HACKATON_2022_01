@@ -6,7 +6,7 @@ from Enum import CommandList,CommandBlock
 ser = serial.Serial('COM4',115200,timeout=0.1)  # connect to RFID Device
 address = 0xFF  # set RFID Address
 
-debug = False
+debug = True
 
 # Generate CRC Based on cmd
 def crc(cmd):
@@ -16,9 +16,6 @@ def crc(cmd):
     cmd.append(((uSum ^ 0xFFF) & 0xFF )+ 1)
     return cmd
 
-def sendCommand(cmd):
-    ser.write(cmd)
-    return getResponseFormat()
 
 def writeCommand(cmd,data = []):
     COMMAND_BLOCK = []
@@ -73,10 +70,10 @@ def flush():
         print("dump : " + str(test))
 
 
-def test_write():
+def test_write(prefix,suffix):
     readProductID()
-    testProductID = "ISTTS123"
-    cnt = 3
+    testProductID = prefix
+    cnt = suffix
     writeProductID(testProductID, cnt)
     readProductID()
 
@@ -84,7 +81,6 @@ def setWorkMode(mode):
     AnswerMode = [0x02,0x00]
     ActiveMode = [0x02,0x01]
     if mode == "answer":
-        flush()
         writeCommand(CommandList.SET_DEVICE_ONE_PARAM.value,AnswerMode)
     if mode == "active":
         writeCommand(CommandList.SET_DEVICE_ONE_PARAM.value,ActiveMode)
@@ -95,44 +91,61 @@ def startReadActive():
 def stopReadActive():
     writeCommand(CommandList.STOP_READ.value)
 
+def sendCommand(cmd):
+    ser.write(cmd)
+    return getResponseFormat()
+
+
 def getResponseFormat():
-    sleep(0.2)
-    data = ser.readall()
-    response_hex = data.hex().upper()
-    hex_list = [response_hex[i:i + 2] for i in range(0, len(response_hex), 2)]
+    sleep(0.1)
+    dataLength = ser.inWaiting()
+    if dataLength > 10:
+        data = ser.read()
+        response_hex = data.hex().upper()
+        hex_list = [response_hex[i:i + 2] for i in range(0, len(response_hex), 2)]
+        hex_space = ' '.join(hex_list)
+        if debug:
+            print(hex_space)
+        return  hex_space
+    else:
+        return False
+
+def toHexString(data):
+    data_hex = data.hex().upper()
+    hex_list = [data_hex[i:i + 2] for i in range(0, len(data_hex), 2)]
     hex_space = ' '.join(hex_list)
-    if debug:
-        print(hex_space)
+    return hex_space
+
 
 def ActiveResponseParser():
     if ser.inWaiting():
         respond = ser.read(32)
-
-        data = respond[18:len(respond)-2]
+        prefix = respond[18:len(respond)-6]
+        suffix = respond[18 + len(prefix):len(respond)-2]
         rssi = respond[len(respond)-2:len(respond)-1]
-        response_hex = data.hex().upper()
-        hex_list = [response_hex[i:i + 2] for i in range(0, len(response_hex), 2)]
-        data = ' '.join(hex_list)
-        if data:
-            print("Data : " + str(data) + " rssi: " + str(rssi.hex()))
+        prefix = toHexString(prefix)
+        suffix = toHexString(suffix)
+        if prefix:
+            if debug:
+                print("Prefix : " + str(prefix) + " Suffix : " + suffix + " rssi: " + str(rssi.hex()))
+            return prefix, suffix
+        else:
+            return "", ""
+    else:
+        return "", ""
 
-#percobaan
-setWorkMode("active")
-startReadActive()
-cart = [{'data':"aabbccddeeff",'cnt':1},{'data':"ssfdfadszcfzxc",'cnt':1},{'data':"sfthsfdgfsg",'cnt':1},]
-detected_item = 'aabbccddeeff'
+# setWorkMode('answer')
+# test_write("UNSUR123",0)
 
-if not any(item['data'] == detected_item for item in cart):
-    cart.append({'data':detected_item,'cnt':1})
-else:
-    data_index = next((index for (index, d) in enumerate(cart) if d["data"] == detected_item), None)
-    print(data_index)
-    cart[data_index].update({'cnt':cart[data_index]['cnt']+1})
-print(cart)
-#percobaan
+
+
 if __name__ == '__main__':
-    while(1):
-        ActiveResponseParser()
+    setWorkMode('active')
+    startReadActive()
+    while 1:
+        prefix, suffix = ActiveResponseParser()
+        if prefix != "":
+            print("Prefix : " + prefix + " Suffix : " + suffix)
 
 
 

@@ -1,27 +1,34 @@
+import time
+
 from PySide6 import QtCore
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QLabel, QHBoxLayout, QApplication, QDialog
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread
 import database
 from dialogWindowAddNewItem import Ui_Dialog
-from dataclasses import dataclass
+import RfidCommand
 
-@dataclass
-class CartModel:
-    def init(self, name, price, quantity, subTotal):
-        self.name = name
-        self.price = price
-        self.quantity = quantity
-        self.subTotal = subTotal
+class WorkerThread(QThread):
+    update_reader = QtCore.Signal(str, str)
+    RfidCommand.setWorkMode('active')
+    RfidCommand.startReadActive()
+    def run(self):
+        while True:
+            prefix, suffix = RfidCommand.ActiveResponseParser()
+            if prefix != "":
+                self.update_reader.emit(prefix, suffix)
+
 
 class UI_Actions_Main_Window:
-    localCart = []
-    showedData = []
-
     def initialSetup(self):
         self.slotConnectionSetup()
         self.scrollAreaSetup()
+        self.localCart = []
+        self.showedData = []
         # self.setUpListBarang()
+        self.worker = WorkerThread()
+        self.worker.start()
+        self.worker.update_reader.connect(self.addNewRow)
 
     def slotConnectionSetup(self):
         self.clearBt.clicked.connect(self.onTapClearButton)
@@ -35,9 +42,9 @@ class UI_Actions_Main_Window:
 
     def onTapClearButton(self):
         self.localCart.clear()
+        self.showedData.clear()
         formattedGrandTotal = "IDR {:,.2f}".format(0)
         self.grandTotalVal.setText(formattedGrandTotal)
-
         self.clearvbox()
 
     def onTapPaymentMethod(self):
@@ -54,6 +61,7 @@ class UI_Actions_Main_Window:
         self.w.setupUi(dialog)
         dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         dialog.exec_()
+        RfidCommand.setWorkMode('active')
         # self.w.show()
 
     def clearvbox(self, L=False):
@@ -71,35 +79,28 @@ class UI_Actions_Main_Window:
                     self.clearvbox(item.layout())
 
     def addNewRow(self, typeProduct, product_code):
+        self.clearvbox()
         grandTotalValue = 0
         fullUuid = typeProduct + " " + product_code
 
-        for item in self.localCart:
-            _, _, _, uuid = item
-            if uuid == fullUuid:
-                return
-
-        good = database.checkDataFromDatabase(fullUuid)
+        good = database.checkDataFromDatabase(typeProduct)
 
         if len(good) > 0:
-            quantityPerItem = 0
-            self.localCart.extend(good)
-
-            for cartId in self.localCart:
-                _, name, price, uuid = cartId
-                print("DAFA", uuid[0:23])
-                if uuid[0:23] == typeProduct:
-                    print("LALALA")
-                    quantityPerItem += 1
-
-            cardModel = {
-                "name": str(name),
-                "quantity": quantityPerItem,
-                "price": str(price),
-                "subTotal": int(quantityPerItem) * int(price)
-            }
-
-            self.showedData.append(cardModel)
+            if fullUuid not in self.localCart:
+                self.localCart.append(fullUuid)
+                _, name, price, uuid = good[0]
+                if not any(item['prefix'] == typeProduct for item in self.showedData):
+                    self.showedData.append({
+                        'prefix': typeProduct,
+                        'suffix': product_code,
+                        'name': str(name),
+                        "quantity": 1,
+                        "price": str(price),
+                        "subTotal": int(1) * int(price)
+                    })
+                else:
+                    data_index = next((index for (index,d) in enumerate(self.showedData) if d['prefix'] == typeProduct),None)
+                    self.showedData[data_index].update({'quantity': self.showedData[data_index]["quantity"] + 1, 'subTotal': int(self.showedData[data_index]["quantity"] + 1) * int(price)})
         else:
             return
 

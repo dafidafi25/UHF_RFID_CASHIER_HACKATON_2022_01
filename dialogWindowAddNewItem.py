@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (QApplication, QDialog, QHBoxLayout, QLabel,
     QPushButton, QSizePolicy, QTextEdit, QVBoxLayout,
     QWidget)
 
+import RfidCommand
+
 import database
 
 class Ui_Dialog(object):
@@ -42,6 +44,7 @@ class Ui_Dialog(object):
 
         self.uuidTextEdit = QTextEdit(self.verticalLayoutWidget)
         self.uuidTextEdit.setObjectName(u"uuidTextEdit")
+        self.uuidTextEdit.setDisabled(True)
 
         self.horizontalLayout_3.addWidget(self.uuidTextEdit)
 
@@ -77,15 +80,32 @@ class Ui_Dialog(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
-        self.addBt = QPushButton(Dialog)
+        self.horizontalLayoutWidget = QWidget(Dialog)
+        self.horizontalLayoutWidget.setObjectName(u"horizontalLayoutWidget")
+        self.horizontalLayoutWidget.setGeometry(QRect(20, 219, 361, 61))
+        self.horizontalLayout_4 = QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.cancelBt = QPushButton(self.horizontalLayoutWidget)
+        self.cancelBt.setObjectName(u"cancelBt")
+        self.cancelBt.setMinimumSize(QSize(0, 60))
+        self.cancelBt.clicked.connect(self.reject)
+
+        self.horizontalLayout_4.addWidget(self.cancelBt)
+
+        self.addBt = QPushButton(self.horizontalLayoutWidget)
         self.addBt.setObjectName(u"addBt")
-        self.addBt.setGeometry(QRect(210, 240, 100, 41))
+        self.addBt.setMinimumSize(QSize(0, 60))
         self.addBt.clicked.connect(self.accept)
 
-        self.cancelBt = QPushButton(Dialog)
-        self.cancelBt.setObjectName(u"cancelBt")
-        self.cancelBt.setGeometry(QRect(90, 240, 100, 41))
-        self.cancelBt.clicked.connect(self.reject)
+        self.horizontalLayout_4.addWidget(self.addBt)
+
+        self.scanUuidBt = QPushButton(self.horizontalLayoutWidget)
+        self.scanUuidBt.setObjectName(u"scanUuidBt")
+        self.scanUuidBt.setMinimumSize(QSize(0, 60))
+        self.scanUuidBt.clicked.connect(self.onTapScanUuid)
+
+        self.horizontalLayout_4.addWidget(self.scanUuidBt)
 
         self.commandResultLb = QLabel(Dialog)
         self.commandResultLb.setObjectName(u"commandResultLb")
@@ -98,15 +118,26 @@ class Ui_Dialog(object):
     # setupUi
 
     def reject(self):
+
         self.Dialog.reject()
+        RfidCommand.setWorkMode('active')
+        RfidCommand.stopReadActive()
 
     def accept(self):
         price = self.priceTextEdit.toPlainText()
         name = self.nameTextEdit.toPlainText()
         stock_uuid = self.uuidTextEdit.toPlainText()
-
         database.addNewStockItem(name, price, stock_uuid)
         self.Dialog.accept()
+        RfidCommand.setWorkMode('active')
+
+    def onTapScanUuid(self):
+        inventory = RfidCommand.readProductID()
+        if inventory:
+            self.uuidTextEdit.setDisabled(False)
+        else:
+            self.uuidTextEdit.setDisabled(True)
+        print("SCAN UUID HEHEHE")
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
@@ -118,6 +149,7 @@ class Ui_Dialog(object):
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Product Price", None))
         self.addBt.setText(QCoreApplication.translate("Dialog", u"ADD", None))
         self.cancelBt.setText(QCoreApplication.translate("Dialog", u"CANCEL", None))
+        self.scanUuidBt.setText(QCoreApplication.translate("Dialog", u"SCAN UUID", None))
         self.commandResultLb.setText(QCoreApplication.translate("Dialog", u"Command Result", None))
     # retranslateUi
 
